@@ -29,7 +29,11 @@ export const createPluginContainer = (plugins: Plugin[]) => {
       const ctx = new Context() as any;
       for (const plugin of plugins) {
         if (plugin.resolveId) {
-          const newId = (plugin.resolveId as Function).call(ctx, id, importer);
+          const newId = await (plugin.resolveId as Function).call(
+            ctx,
+            id,
+            importer
+          );
           if (newId) {
             id = typeof newId === "string" ? newId : newId.id;
             return { id };
@@ -53,7 +57,7 @@ export const createPluginContainer = (plugins: Plugin[]) => {
     async transform(code, id) {
       const ctx = new Context() as any;
       for (const plugin of plugins) {
-        if (plugin.load) {
+        if (plugin.transform) {
           const result = await (plugin.transform as Function).call(
             ctx,
             code,
@@ -67,7 +71,7 @@ export const createPluginContainer = (plugins: Plugin[]) => {
           }
         }
       }
-      return null;
+      return { code };
     },
   };
   return pluginContainer;

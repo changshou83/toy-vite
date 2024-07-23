@@ -48,7 +48,7 @@ export function transformMiddleware(
         result = result.code;
       }
       res.statusCode = 200;
-      res.setHeader("Context-Type", "application/javascript");
+      res.setHeader("Content-Type", "application/javascript");
       return res.end(result);
     }
     next();
