@@ -2,7 +2,7 @@ import { init, parse } from "es-module-lexer";
 import MagicString from "magic-string";
 import path from "path";
 import { Plugin } from "../plugin";
-import { isJSRequest, normalizePath } from "../utils";
+import { cleanUrl, getShortName, isJSRequest, normalizePath } from "../utils";
 import { ServerContext } from "../server";
 import { BARE_IMPORT_RE, PRE_BUNDLE_DIR } from "../constants";
 import { PluginContext } from "rollup";
@@ -23,10 +23,32 @@ export function importAnalysisPlugin(): Plugin {
       await init;
       const [imports] = parse(code);
       const s = new MagicString(code);
+      const resolve = async (id: string, importer?: string) => {
+        const resolved = await serverContext.pluginContainer.resolveId(
+          id,
+          normalizePath(importer!)
+        );
+        if (!resolved) {
+          return;
+        }
+        let resolvedId = `/${getShortName(
+          resolved.id,
+          normalizePath(serverContext.root)
+        )}`;
+        return resolvedId;
+      };
       // 对于每个 import 语句依次分析
       for (const importInfo of imports) {
         const { s: modStart, e: modEnd, n: modSource } = importInfo;
         if (!modSource) continue;
+        // 静态资源
+        if (modSource.endsWith(".svg")) {
+          // 带上 ?import 标签
+          const resolvedUrl = await resolve(modSource, id);
+          console.log({ resolvedUrl });
+          s.overwrite(modStart, modEnd, `${resolvedUrl}?import`);
+          continue;
+        }
         // 第三方库：重写到预构建目录中
         if (BARE_IMPORT_RE.test(modSource)) {
           const bundlePath = normalizePath(

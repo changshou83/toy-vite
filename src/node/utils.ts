@@ -15,6 +15,14 @@ export function normalizePath(id: string): string {
 export const cleanUrl = (url: string): string =>
   url.replace(HASH_RE, "").replace(QUERY_RE, "");
 
+export const removeImportQuery = (url: string): string =>
+  url.replace(/\?import/, "");
+
+export const getShortName = (file: string, root: string) => {
+  console.log(file.startsWith(root + "/"), root, file);
+  return file.startsWith(root + "/") ? path.posix.relative(root, file) : file;
+};
+
 export const isJSRequest = (id: string): boolean => {
   id = cleanUrl(id);
   if (JS_TYPES_RE.test(id)) {
@@ -28,3 +36,7 @@ export const isJSRequest = (id: string): boolean => {
 
 export const isCSSRequest = (id: string): boolean =>
   cleanUrl(id).endsWith(".css");
+
+export function isImportRequest(url: string): boolean {
+  return url.endsWith("?import");
+}

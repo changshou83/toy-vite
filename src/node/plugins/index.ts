@@ -1,4 +1,5 @@
 import { Plugin } from "../plugin";
+import { assetsPlugin } from "./assets";
 import { cssPlugin } from "./css";
 import { esbuildTransformPlugin } from "./esbuild";
 import { importAnalysisPlugin } from "./importAnalysis";
@@ -14,5 +15,7 @@ export function resolvePlugins(): Plugin[] {
     importAnalysisPlugin(),
     // css
     cssPlugin(),
+    // 静态资源
+    assetsPlugin(),
   ];
 }
