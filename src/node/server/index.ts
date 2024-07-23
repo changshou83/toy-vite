@@ -4,6 +4,7 @@ import { optimize } from "../optimizer";
 import { createPluginContainer, PluginContainer } from "../pluginContainer";
 import { Plugin } from "../plugin";
 import { resolvePlugins } from "../plugins";
+import { indexHtmlMiddleware } from "./middlewares/indexHtml";
 
 export interface ServerContext {
   root: string;
@@ -32,6 +33,8 @@ export async function startDevServer() {
       await plugin.configureServer(serverContext);
     }
   }
+  // 使用中间件
+  app.use(indexHtmlMiddleware(serverContext));
   app.listen(3000, async () => {
     // 依赖预构建
     await optimize(root);
