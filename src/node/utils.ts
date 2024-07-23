@@ -25,3 +25,6 @@ export const isJSRequest = (id: string): boolean => {
   }
   return false;
 };
+
+export const isCSSRequest = (id: string): boolean =>
+  cleanUrl(id).endsWith(".css");
