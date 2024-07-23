@@ -29,3 +29,5 @@ export const PRE_BUNDLE_DIR = path.join("node_modules", ".t-vite");
 export const JS_TYPES_RE = /\.(?:j|t)sx?$|\.mjs$/;
 export const QUERY_RE = /\?.*$/s;
 export const HASH_RE = /#.*$/s;
+// 默认支持编译的文件类型
+export const DEFAULT_EXTERSIONS = [".tsx", ".ts", ".jsx", "js"];
