@@ -19,7 +19,6 @@ export const removeImportQuery = (url: string): string =>
   url.replace(/\?import/, "");
 
 export const getShortName = (file: string, root: string) => {
-  console.log(file.startsWith(root + "/"), root, file);
   return file.startsWith(root + "/") ? path.posix.relative(root, file) : file;
 };
 

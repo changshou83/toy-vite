@@ -45,7 +45,6 @@ export function importAnalysisPlugin(): Plugin {
         if (modSource.endsWith(".svg")) {
           // 带上 ?import 标签
           const resolvedUrl = await resolve(modSource, id);
-          console.log({ resolvedUrl });
           s.overwrite(modStart, modEnd, `${resolvedUrl}?import`);
           continue;
         }
@@ -57,12 +56,12 @@ export function importAnalysisPlugin(): Plugin {
           s.overwrite(modStart, modEnd, bundlePath);
         }
         // 相对路径：调用插件上下文的resolve方法，自动经过路径解析插件的处理
-        // else if (modSource.startsWith(".") || modSource.startsWith("/")) {
-        //   const resolved = await this.resolve(modSource, id);
-        //   if (resolved) {
-        //     s.overwrite(modStart, modEnd, resolved.id);
-        //   }
-        // }
+        else if (modSource.startsWith(".") || modSource.startsWith("/")) {
+          const resolvedId = await resolve(modSource, id);
+          if (resolvedId) {
+            s.overwrite(modStart, modEnd, resolvedId);
+          }
+        }
       }
       return {
         code: s.toString(),
