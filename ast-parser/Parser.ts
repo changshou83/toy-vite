@@ -181,8 +181,6 @@ export class Parser {
           end: declaration.end,
         };
       }
-      // TODO: export default class {}
-      // TODO: export default { a: 1 };
     }
     // export {
     else if (this._checkCurrentTokenType(TokenType.LeftCurly)) {

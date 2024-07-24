@@ -9,7 +9,9 @@
   "scripts": {
     "start": "tsup --watch",
     "build": "tsup --minify",
-    "test": "vitest"
+    "test": "vitest",
+    "bundler:dev": "tsup ./mini-bundle/rollup.ts --format cjs,esm --dts --clean --watch",
+    "bundler:build": "tsup ./mini-bundler/rollup.ts --format cjs,esm --dts --clean --minify"
   },
   "keywords": [],
   "author": "",
@@ -33,9 +35,12 @@
     "@types/connect": "^3.4.38",
     "@types/debug": "^4.1.12",
     "@types/fs-extra": "^11.0.4",
+    "@types/node": "^20.14.12",
     "@types/resolve": "^1.20.6",
     "@types/ws": "^8.5.11",
     "tsup": "^8.2.1",
+    "typescript": "^5.5.4",
+    "typescript-transform-paths": "^3.4.7",
     "vitest": "^2.0.4"
   }
 }
