@@ -14,8 +14,13 @@ export async function transformRequest(
   url: string,
   serverContext: ServerContext
 ) {
-  const { pluginContainer } = serverContext;
+  const { pluginContainer, moduleGraph } = serverContext;
   url = cleanUrl(url);
+  // 返回缓存
+  let mod = await moduleGraph.ensureEntryFromUrl(url);
+  if (mod && mod.transformResult) {
+    return mod.transformResult;
+  }
   // 依次调用 resolveId，load和transform钩子
   const resolveResult = await pluginContainer.resolveId(url);
   let transformResult;
@@ -24,12 +29,18 @@ export async function transformRequest(
     if (typeof code === "object" && code !== null) {
       code = code.code;
     }
+    // 注册模块
+    mod = await moduleGraph.ensureEntryFromUrl(url);
     if (code) {
       transformResult = await pluginContainer.transform(
         code as string,
         resolveResult?.id
       );
     }
+  }
+  // 缓存模块编译后产物
+  if (mod) {
+    mod.transformResult = transformResult;
   }
   return transformResult;
 }

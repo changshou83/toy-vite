@@ -7,12 +7,14 @@ import { resolvePlugins } from "../plugins";
 import { indexHtmlMiddleware } from "./middlewares/indexHtml";
 import { transformMiddleware } from "./middlewares/transform";
 import { staticMiddleware } from "./middlewares/static";
+import { ModuleGraph } from "../ModuleGraph";
 
 export interface ServerContext {
   root: string;
   pluginContainer: PluginContainer;
   app: connect.Server;
   plugins: Plugin[];
+  moduleGraph: ModuleGraph;
 }
 
 export async function startDevServer() {
@@ -23,11 +25,15 @@ export async function startDevServer() {
   const plugins = resolvePlugins();
   // 创建 插件容器 模拟 rollup 插件机制
   const pluginContainer = createPluginContainer(plugins);
+  // HMR
+  const moduleGraph = new ModuleGraph((url) => pluginContainer.resolveId(url));
+  // 服务器上下文
   const serverContext: ServerContext = {
-    root: process.cwd(),
+    root,
     app,
     pluginContainer,
     plugins,
+    moduleGraph,
   };
   // 调用 configureServer hook
   for (const plugin of plugins) {

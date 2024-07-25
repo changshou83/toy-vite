@@ -2,9 +2,19 @@ import { init, parse } from "es-module-lexer";
 import MagicString from "magic-string";
 import path from "path";
 import { Plugin } from "../plugin";
-import { cleanUrl, getShortName, isJSRequest, normalizePath } from "../utils";
+import {
+  cleanUrl,
+  getShortName,
+  isInternalRequest,
+  isJSRequest,
+  normalizePath,
+} from "../utils";
 import { ServerContext } from "../server";
-import { BARE_IMPORT_RE, PRE_BUNDLE_DIR } from "../constants";
+import {
+  BARE_IMPORT_RE,
+  CLIENT_PUBLIC_PATH,
+  PRE_BUNDLE_DIR,
+} from "../constants";
 import { PluginContext } from "rollup";
 
 // 重写依赖路径
@@ -21,6 +31,10 @@ export function importAnalysisPlugin(): Plugin {
       }
       // 解析 import 语句
       await init;
+      // 更新模块之间的依赖关系
+      const { moduleGraph } = serverContext;
+      const curMod = moduleGraph.getModuleById(id)!;
+      const importedModules = new Set<string>();
       const [imports] = parse(code);
       const s = new MagicString(code);
       const resolve = async (id: string, importer?: string) => {
@@ -54,15 +68,20 @@ export function importAnalysisPlugin(): Plugin {
             path.join("/", PRE_BUNDLE_DIR, `${modSource}.js`)
           );
           s.overwrite(modStart, modEnd, bundlePath);
+          importedModules.add(bundlePath);
         }
         // 相对路径：调用插件上下文的resolve方法，自动经过路径解析插件的处理
         else if (modSource.startsWith(".") || modSource.startsWith("/")) {
           const resolvedId = await resolve(modSource, id);
           if (resolvedId) {
             s.overwrite(modStart, modEnd, resolvedId);
+            importedModules.add(resolvedId);
           }
         }
       }
+
+      moduleGraph.updateModuleInfo(curMod, importedModules);
+
       return {
         code: s.toString(),
         map: s.generateMap(),
