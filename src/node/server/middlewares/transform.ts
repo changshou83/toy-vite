@@ -29,7 +29,7 @@ export async function transformRequest(
     if (typeof code === "object" && code !== null) {
       code = code.code;
     }
-    // 注册模块
+    // 在模块依赖图注册模块
     mod = await moduleGraph.ensureEntryFromUrl(url);
     if (code) {
       transformResult = await pluginContainer.transform(
