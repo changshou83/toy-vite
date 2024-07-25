@@ -7,7 +7,11 @@ import { resolvePlugins } from "../plugins";
 import { indexHtmlMiddleware } from "./middlewares/indexHtml";
 import { transformMiddleware } from "./middlewares/transform";
 import { staticMiddleware } from "./middlewares/static";
+import chokidar, { FSWatcher } from "chokidar";
+import { createWSServer } from "../ws";
 import { ModuleGraph } from "../ModuleGraph";
+import { normalizePath } from "../utils";
+import { bindingHMREvents } from "../hmr";
 
 export interface ServerContext {
   root: string;
@@ -15,6 +19,8 @@ export interface ServerContext {
   app: connect.Server;
   plugins: Plugin[];
   moduleGraph: ModuleGraph;
+  ws: { send: (data: any) => void; close: () => void };
+  watcher: FSWatcher;
 }
 
 export async function startDevServer() {
@@ -27,14 +33,22 @@ export async function startDevServer() {
   const pluginContainer = createPluginContainer(plugins);
   // HMR
   const moduleGraph = new ModuleGraph((url) => pluginContainer.resolveId(url));
+  const watcher = chokidar.watch(root, {
+    ignored: ["**/node_modules/**", "**/.git/**"],
+    ignoreInitial: true,
+  });
+  const ws = createWSServer(app);
   // 服务器上下文
   const serverContext: ServerContext = {
-    root,
+    root: normalizePath(process.cwd()),
     app,
     pluginContainer,
     plugins,
     moduleGraph,
+    ws,
+    watcher,
   };
+  bindingHMREvents(serverContext);
   // 调用 configureServer hook
   for (const plugin of plugins) {
     if (plugin.configureServer) {
