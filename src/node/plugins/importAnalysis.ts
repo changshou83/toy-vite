@@ -26,7 +26,7 @@ export function importAnalysisPlugin(): Plugin {
       serverContext = s;
     },
     async transform(this: PluginContext, code: string, id: string) {
-      if (!isJSRequest(id)) {
+      if (!isJSRequest(id) || isInternalRequest(id)) {
         return null;
       }
       // 解析 import 语句
@@ -45,10 +45,15 @@ export function importAnalysisPlugin(): Plugin {
         if (!resolved) {
           return;
         }
+        const cleanId = cleanUrl(resolved.id);
+        const mod = moduleGraph.getModuleById(cleanId);
         let resolvedId = `/${getShortName(
           resolved.id,
           normalizePath(serverContext.root)
         )}`;
+        if (mod && mod.lastHMRTimestamp > 0) {
+          resolvedId += "?t=" + mod.lastHMRTimestamp;
+        }
         return resolvedId;
       };
       // 对于每个 import 语句依次分析
@@ -78,6 +83,16 @@ export function importAnalysisPlugin(): Plugin {
             importedModules.add(resolvedId);
           }
         }
+      }
+      // 只对业务源码注入
+      if (!id.includes("node_modules")) {
+        // 注入 HMR 相关的工具函数,实现 import.meta.hot
+        s.prepend(
+          `import { createHotContext as __vite__createHotContext } from "${CLIENT_PUBLIC_PATH}";` +
+            `import.meta.hot = __vite__createHotContext(${JSON.stringify(
+              cleanUrl(curMod.url)
+            )});`
+        );
       }
 
       moduleGraph.updateModuleInfo(curMod, importedModules);

@@ -1,6 +1,11 @@
 import os from "os";
 import path from "path";
-import { HASH_RE, JS_TYPES_RE, QUERY_RE } from "./constants";
+import {
+  CLIENT_PUBLIC_PATH,
+  HASH_RE,
+  JS_TYPES_RE,
+  QUERY_RE,
+} from "./constants";
 
 export function slash(p: string): string {
   return p.replace(/\\/g, "/");
@@ -38,4 +43,10 @@ export const isCSSRequest = (id: string): boolean =>
 
 export function isImportRequest(url: string): boolean {
   return url.endsWith("?import");
+}
+
+const INTERNAL_LIST = [CLIENT_PUBLIC_PATH, "/@react-refresh"];
+
+export function isInternalRequest(url: string): boolean {
+  return INTERNAL_LIST.includes(url);
 }
